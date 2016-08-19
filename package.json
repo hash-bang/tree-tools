@@ -1,0 +1,43 @@
+{
+  "name": "tree-tools",
+  "version": "1.0.0",
+  "description": "Tools to manage deeply nested collection tree structures",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hash-bang/tree-tools.git"
+  },
+  "keywords": [
+    "tree",
+    "collection",
+    "tool",
+    "utility",
+    "nested",
+    "deep"
+  ],
+  "author": "Matt Carter <m@ttcarter.com> (https://github.com/hash-bang)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hash-bang/tree-tools/issues"
+  },
+  "homepage": "https://github.com/hash-bang/tree-tools#readme",
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "chai": "^3.5.0",
+    "gulp": "^3.9.1",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-util": "^3.0.7",
+    "mocha": "^3.0.2",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "dependencies": {
+    "lodash": "^4.15.0"
+  }
+}
