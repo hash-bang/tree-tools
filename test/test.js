@@ -143,3 +143,22 @@ describe('treeTools.children()', function() {
 		expect(treeTools.children(tree, {path: '/bar/baz'}).map(node => node.path)).to.deep.equal([]);
 	});
 });
+
+
+describe('treeTools.hasChildren()', function() {
+	it('should be able to determine the children of "/"', function() {
+		expect(treeTools.hasChildren(treeTools.find(tree, {path: '/'}))).to.be.true;
+	});
+
+	it('should be able to determine the children of "/foo"', function() {
+		expect(treeTools.hasChildren(treeTools.find(tree, {path: '/foo'}))).to.be.true;
+	});
+
+	it('should be able to determine the children of "/bar"', function() {
+		expect(treeTools.hasChildren(treeTools.find(tree, {path: '/bar'}))).to.be.true;
+	});
+
+	it('should be able to determine the (non-existant) children of "/bar/baz"', function() {
+		expect(treeTools.hasChildren(treeTools.find(tree, {path: '/bar/baz'}))).to.be.false;
+	});
+});

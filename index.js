@@ -116,4 +116,22 @@ var treeTools = module.exports = {
 		seekDown(rootNode, 0);
 		return seekStack;
 	},
+
+	
+	/**
+	* Determines whether a given node has children
+	* @param {Object|array} branch The tree structure to search (assumed to be a collection)
+	* @param {Object} options Optional options object
+	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
+	* @return {array} An array of all child elements under that item
+	*/
+	hasChildren: function(branch, options) {
+		var settings = _.defaults(options, {
+			childNode: ['children'],
+		});
+
+		return settings.childNode.some(function(key) {
+			return branch[key] && _.isArray(branch[key]) && branch[key].length;
+		});
+	},
 };
