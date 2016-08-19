@@ -40,7 +40,7 @@ return {
 
 
 	/**
-	* Utlity function to deep search a tree structure for a matching query and find parents up to the given query
+	* Utility function to deep search a tree structure for a matching query and find parents up to the given query
 	* If found this function will return an array of all generations with the found branch as the last element of the array
 	* @param {Object|array} tree The tree structure to search
 	* @param {Object} query A valid lodash query to run (anything valid via _.find())
@@ -83,7 +83,7 @@ return {
 
 	
 	/**
-	* Utlity function to deep search a tree structure for a matching query and find all children after the given query
+	* Utility function to deep search a tree structure for a matching query and find all children after the given query
 	* If found this function will return an array of all child elements NOT including the query element
 	* @param {Object|array} tree The tree structure to search (assumed to be a collection)
 	* @param {Object|null} [query] A valid lodash query to run (anything valid via _.find()). If null the entire flattened tree is returned
@@ -115,6 +115,24 @@ return {
 
 		seekDown(rootNode, 0);
 		return seekStack;
+	},
+
+	
+	/**
+	* Determines whether a given node has children
+	* @param {Object|array} branch The tree structure to search (assumed to be a collection)
+	* @param {Object} options Optional options object
+	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
+	* @return {array} An array of all child elements under that item
+	*/
+	hasChildren: function(branch, options) {
+		var settings = _.defaults(options, {
+			childNode: ['children'],
+		});
+
+		return settings.childNode.some(function(key) {
+			return branch[key] && _.isArray(branch[key]) && branch[key].length;
+		});
 	},
 };
 });
