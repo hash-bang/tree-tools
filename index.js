@@ -119,7 +119,7 @@ var treeTools = module.exports = {
 
 	
 	/**
-	* Determines whether a given node has children
+	* Utility function to determines whether a given node has children
 	* @param {Object|array} branch The tree structure to search (assumed to be a collection)
 	* @param {Object} options Optional options object
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements

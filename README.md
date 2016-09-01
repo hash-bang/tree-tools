@@ -64,3 +64,12 @@ If found this function will return an array of all child elements NOT including 
 ```javscript
 treeTools.children(tree, {path: '/foo'});
 ```
+
+
+hasChildren(branch, [options])
+------------------------------
+Utility function to determines whether a given node has children.
+
+```javascript
+treeTools.hasChildren(someBranch); // Returns a boolean
+```
