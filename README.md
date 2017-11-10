@@ -73,3 +73,12 @@ Utility function to determines whether a given node has children.
 ```javascript
 treeTools.hasChildren(someBranch); // Returns a boolean
 ```
+
+
+sortBy(tree, propertyName)
+------------------------------
+Utility function to sort tree by specific property.
+
+```javascript
+treeTools.sortBy(tree, ['id', 'title']); // Returns new tree sorted
+```

@@ -162,3 +162,17 @@ describe('treeTools.hasChildren()', function() {
 		expect(treeTools.hasChildren(treeTools.find(tree, {path: '/bar/baz'}))).to.be.false;
 	});
 });
+
+describe('treeTools.sortBy()', function() {
+	it('should sort the tree', function() {
+		expect(tree.children[0].title).to.equal('foo');
+		expect(tree.children[1].title).to.equal('bar');
+		expect(tree.children[2].title).to.equal('baz');
+		
+		var result = treeTools.sortBy(tree, ['title', 'path']);
+		
+		expect(tree.children[0].title).to.equal('bar');
+		expect(tree.children[1].title).to.equal('baz');
+		expect(tree.children[2].title).to.equal('foo');
+	});
+});

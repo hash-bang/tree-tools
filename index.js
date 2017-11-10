@@ -134,4 +134,32 @@ var treeTools = module.exports = {
 			return branch[key] && _.isArray(branch[key]) && branch[key].length;
 		});
 	},
+
+	/**
+	 * Utility function to sort tree by specific property
+	 * @param  {array} tree The tree structure to sort
+	 * @param  {array|string} propertyName Property names to sort the tree.
+	 * @return {array} An array sorted by propertyName
+	 */
+	sortBy: function (tree, propertyName) {
+
+		// It is needed an array structure to sort.
+		if (!Array.isArray(tree)) tree = [tree];
+		
+		_.sortRecursive = function (tree, propertyName) {
+			
+			tree.forEach(function (item) {
+				var keys = _.keys(item);
+				keys.forEach(function(key){
+						if (_.isArray(item[key])) {
+								item[key] = _.sortRecursive(item[key], propertyName);
+						}
+				});
+			});
+
+			return _.sortBy(tree, propertyName);
+		};
+
+		return _.sortRecursive(tree, propertyName)[0];
+	},
 };
