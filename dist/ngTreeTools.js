@@ -81,7 +81,7 @@ return {
 		return seekStack;
 	},
 
-	
+
 	/**
 	* Utility function to deep search a tree structure for a matching query and find all children after the given query
 	* If found this function will return an array of all child elements NOT including the query element
@@ -117,9 +117,9 @@ return {
 		return seekStack;
 	},
 
-	
+
 	/**
-	* Determines whether a given node has children
+	* Utility function to determines whether a given node has children
 	* @param {Object|array} branch The tree structure to search (assumed to be a collection)
 	* @param {Object} options Optional options object
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
@@ -133,6 +133,32 @@ return {
 		return settings.childNode.some(function(key) {
 			return branch[key] && _.isArray(branch[key]) && branch[key].length;
 		});
+	},
+
+
+	/**
+	 * Utility function to sort tree by specific property or an array of properties
+	 * @param {array} tree The tree structure to sort
+	 * @param {array|string} propertyName Property names to sort the tree
+	 * @return {array} An array sorted by propertyName
+	 */
+	sortBy: function (tree, propertyName) {
+		// It is needed an array structure to sort.
+		if (!_.isArray(tree)) tree = [tree];
+
+		var sortRecursive = (tree, propertyName) => {
+			tree.forEach(item =>
+				_(item)
+					.keys()
+					.forEach(key => {
+						if (_.isArray(item[key])) item[key] = sortRecursive(item[key], propertyName);
+					})
+			);
+
+			return _.sortBy(tree, propertyName);
+		};
+
+		return sortRecursive(tree, propertyName)[0];
 	},
 };
 });
