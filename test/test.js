@@ -61,6 +61,51 @@ var tree = {
 		},
 	],
 };
+
+var treeToSort = {
+	id: '0',
+	name: 'parent',
+	children: [
+		{
+			id: '1',
+			name: 'b',
+			children: [
+				{
+					id: '1.1',
+					name: 't',
+					children: []
+				}
+			]
+		},
+		{
+			id: '3',
+			name: 'g',
+			children: []
+		},
+		{
+			id: '2',
+			name: 'z',
+			children: [
+				{
+					id: '2.1',
+					name: 'x',
+					children: []
+				},
+				{
+					id: '2.2',
+					name: 'r',
+					children: [
+						{
+							id: '2.2.2',
+							name: 'a',
+							children: []
+						}
+					]
+				}
+			]
+		}
+	]	
+};
 // }}}
 
 describe('treeTools.find()', function() {
@@ -164,15 +209,34 @@ describe('treeTools.hasChildren()', function() {
 });
 
 describe('treeTools.sortBy()', function() {
-	it('should sort the tree', function() {
-		expect(tree.children[0].title).to.equal('foo');
-		expect(tree.children[1].title).to.equal('bar');
-		expect(tree.children[2].title).to.equal('baz');
+
+	it('should sort the tree by id', function() {
+		expect(treeToSort.children[0].id).to.equal('1');
+		expect(treeToSort.children[1].id).to.equal('3');
+		expect(treeToSort.children[2].id).to.equal('2');
 		
-		var result = treeTools.sortBy(tree, ['title', 'path']);
-		
-		expect(tree.children[0].title).to.equal('bar');
-		expect(tree.children[1].title).to.equal('baz');
-		expect(tree.children[2].title).to.equal('foo');
+		var result = treeTools.sortBy(treeToSort, ['id'])[0];
+
+		expect(result.children[0].id).to.equal('1');
+		expect(result.children[1].id).to.equal('2');
+		expect(result.children[2].id).to.equal('3');
+		expect(result.children[1].children[0].id).to.equal('2.1');
+		expect(result.children[1].children[1].id).to.equal('2.2');
+
 	});
+
+	it('should sort the tree by name', function() {
+		expect(treeToSort.children[0].id).to.equal('1');
+		expect(treeToSort.children[1].id).to.equal('2');
+		expect(treeToSort.children[2].id).to.equal('3');
+
+		var result = treeTools.sortBy(treeToSort, ['name'])[0];
+
+		expect(result.children[0].id).to.equal('1');
+		expect(result.children[1].id).to.equal('3');
+		expect(result.children[2].id).to.equal('2');
+		expect(result.children[2].children[0].id).to.equal('2.2');
+		expect(result.children[2].children[1].id).to.equal('2.1');
+	});
+
 });
