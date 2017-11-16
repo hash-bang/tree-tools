@@ -146,19 +146,15 @@ return {
 		// It is needed an array structure to sort.
 		if (!_.isArray(tree)) tree = [tree];
 
-		var sortRecursive = (tree, propertyName) => {
-			tree.forEach(item =>
-				_(item)
-					.keys()
-					.forEach(key => {
-						if (_.isArray(item[key])) item[key] = sortRecursive(item[key], propertyName);
-					})
-			);
+		tree.forEach((item) =>
+			_(item)
+				.keys()
+				.forEach(key => {
+					if (_.isArray(item[key])) item[key] = this.sortBy(item[key], propertyName);
+				})
+		);
 
-			return _.sortBy(tree, propertyName);
-		};
-
-		return sortRecursive(tree, propertyName)[0];
+		return _.sortBy(tree, propertyName);
 	},
-};
-});
+
+};});
