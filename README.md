@@ -31,6 +31,7 @@ In all the examples below the example tree structure is similar to [the main tes
 find(tree, query, [options])
 ----------------------------
 Find a single node deeply within a tree structure.
+Query can be any valid lodash matching object or a function.
 
 ```javascript
 treeTools.find(tree, {path: '/bar/baz'});
