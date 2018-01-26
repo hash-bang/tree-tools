@@ -104,12 +104,12 @@ var treeToSort = {
 				}
 			]
 		}
-	]	
+	]
 };
 // }}}
 
 describe('treeTools.find()', function() {
-	
+
 	it('should be able to find the "/" node', function() {
 		expect(treeTools.find(tree, {path: '/'})).to.have.property('path', '/');
 	});
@@ -126,11 +126,15 @@ describe('treeTools.find()', function() {
 		expect(treeTools.find(tree, {path: '/bar/baz'})).to.have.property('path', '/bar/baz');
 	});
 
+	it('should be able to find the "/bar/baz" node (via function)', function() {
+		expect(treeTools.find(tree, i => i.path == '/bar/baz')).to.have.property('path', '/bar/baz');
+	});
+
 });
 
 
-describe('treeTools.flattenTree()', function() {
-	
+describe('treeTools.flatten()', function() {
+
 	it('should be able to flatten the "/" node', function() {
 		expect(treeTools.flatten(treeTools.find(tree, {path: '/'})).map(node => node.path)).to.deep.equal(['/', '/foo', '/foo/foo', '/foo/bar', '/foo/baz', '/bar', '/bar/foo', '/bar/bar', '/bar/baz', '/baz', '/baz/foo', '/baz/bar', '/baz/baz']);
 	});
@@ -151,7 +155,7 @@ describe('treeTools.flattenTree()', function() {
 
 
 describe('treeTools.parents()', function() {
-	
+
 	it('should be able to find the (non-existant) parents of "/"', function() {
 		expect(treeTools.parents(tree, {path: '/'}).map(node => node.path)).to.deep.equal(['/']);
 	});
@@ -168,6 +172,10 @@ describe('treeTools.parents()', function() {
 		expect(treeTools.parents(tree, {path: '/bar/baz'}).map(node => node.path)).to.deep.equal(['/', '/bar', '/bar/baz']);
 	});
 
+	it('should be able to find the parents of "/bar/baz" (by function)', function() {
+		expect(treeTools.parents(tree, i => i.path == '/bar/baz').map(node => node.path)).to.deep.equal(['/', '/bar', '/bar/baz']);
+	});
+
 });
 
 
@@ -178,6 +186,10 @@ describe('treeTools.children()', function() {
 
 	it('should be able to find the children of "/foo"', function() {
 		expect(treeTools.children(tree, {path: '/foo'}).map(node => node.path)).to.deep.equal(['/foo/foo', '/foo/bar', '/foo/baz']);
+	});
+
+	it('should be able to find the children of "/foo" (via function)', function() {
+		expect(treeTools.children(tree, i => i.path == '/foo').map(node => node.path)).to.deep.equal(['/foo/foo', '/foo/bar', '/foo/baz']);
 	});
 
 	it('should be able to find the children of "/bar"', function() {
@@ -214,7 +226,7 @@ describe('treeTools.sortBy()', function() {
 		expect(treeToSort.children[0].id).to.equal('1');
 		expect(treeToSort.children[1].id).to.equal('3');
 		expect(treeToSort.children[2].id).to.equal('2');
-		
+
 		var result = treeTools.sortBy(treeToSort, ['id'])[0];
 
 		expect(result.children[0].id).to.equal('1');
