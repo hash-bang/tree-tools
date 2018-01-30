@@ -48,14 +48,17 @@ var tree = {
 				{
 					title: 'baz-foo',
 					path: '/baz/foo',
+					children: 123,
 				},
 				{
 					title: 'baz-bar',
 					path: '/baz/bar',
+					children: ()=> {},
 				},
 				{
 					title: 'baz-baz',
 					path: '/baz/baz',
+					children: {},
 				},
 			],
 		},

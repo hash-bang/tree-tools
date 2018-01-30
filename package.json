@@ -1,6 +1,6 @@
 {
   "name": "tree-tools",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Tools to manage deeply nested collection tree structures",
   "main": "index.js",
   "directories": {
