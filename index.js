@@ -22,15 +22,24 @@ var treeTools = module.exports = {
 	/**
 	* Return all branches of a tree as a flat array
 	* The return array with be a depth-first-search i.e. the order of the elements will be deepest traversal at each stage (so don't expact all root keys to be listed first)
+	* @param {Object} options Optional options object passed to parents() finder
+	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @return {Object|array} An array of all elements
 	*/
-	flatten: function(tree) {
+	flatten: function(tree, options) {
+		var settings = _.defaults(options, {
+			childNode: ['children'],
+		});
+		settings.childNode = _.castArray(settings.childNode);
+
 		var seekStack = [];
-		var seekDown = function(tree) {
-			tree.forEach(function(branch) {
+		var seekDown = tree => {
+			tree.forEach(branch => {
 				seekStack.push(branch);
 
-				if (branch.children && branch.children.length) seekDown(branch.children);
+				settings.childNode.some(key => {
+					if (branch[key] && _.isArray(branch[key])) seekDown(branch[key]);
+				});
 			});
 		};
 
@@ -56,7 +65,7 @@ var treeTools = module.exports = {
 		});
 		settings.childNode = _.castArray(settings.childNode);
 
-		var seekDown = function(tree) {
+		var seekDown = tree => {
 			var foundChild = _.find(tree, _.isFunction(query) ? query : compiledQuery);
 			if (foundChild) {
 				seekStack.unshift(foundChild);
@@ -64,7 +73,7 @@ var treeTools = module.exports = {
 			} else {
 				return tree.some(function(branch) {
 					var walkedStack = false;
-					settings.childNode.some(function(key) { // Walk down first found childNode entry
+					settings.childNode.some(key => { // Walk down first found childNode entry
 						if (branch[key] && _.isArray(branch[key]) && seekDown(branch[key])) {
 							// Found a valid key - stop iterating over possible key names
 							seekStack.unshift(branch);
@@ -101,11 +110,11 @@ var treeTools = module.exports = {
 		var rootNode = query ? treeTools.find(tree, query) : tree;
 
 		var seekStack = [];
-		var seekDown = function(branch, level) {
+		var seekDown = (branch, level) => {
 			if (level > 0) seekStack.push(branch);
-			settings.childNode.some(function(key) {
+			settings.childNode.some(key => {
 				if (branch[key] && _.isArray(branch[key])) {
-					branch[key].forEach(function(branchChild) {
+					branch[key].forEach(branchChild => {
 						seekDown(branchChild, level +1);
 					});
 					return true;
@@ -130,9 +139,7 @@ var treeTools = module.exports = {
 			childNode: ['children'],
 		});
 
-		return settings.childNode.some(function(key) {
-			return branch[key] && _.isArray(branch[key]) && branch[key].length;
-		});
+		return settings.childNode.some(key => branch[key] && _.isArray(branch[key]) && branch[key].length);
 	},
 
 

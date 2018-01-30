@@ -23,15 +23,24 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
 		/**
   * Return all branches of a tree as a flat array
   * The return array with be a depth-first-search i.e. the order of the elements will be deepest traversal at each stage (so don't expact all root keys to be listed first)
+  * @param {Object} options Optional options object passed to parents() finder
+  * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
   * @return {Object|array} An array of all elements
   */
-		flatten: function flatten(tree) {
+		flatten: function flatten(tree, options) {
+			var settings = _.defaults(options, {
+				childNode: ['children']
+			});
+			settings.childNode = _.castArray(settings.childNode);
+
 			var seekStack = [];
 			var seekDown = function seekDown(tree) {
 				tree.forEach(function (branch) {
 					seekStack.push(branch);
 
-					if (branch.children && branch.children.length) seekDown(branch.children);
+					settings.childNode.some(function (key) {
+						if (branch[key] && _.isArray(branch[key])) seekDown(branch[key]);
+					});
 				});
 			};
 

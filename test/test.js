@@ -138,6 +138,10 @@ describe('treeTools.find()', function() {
 
 describe('treeTools.flatten()', function() {
 
+	it('should be able to flatten the entire tree', function() {
+		expect(treeTools.flatten(tree).map(node => node.path)).to.deep.equal(['/', '/foo', '/foo/foo', '/foo/bar', '/foo/baz', '/bar', '/bar/foo', '/bar/bar', '/bar/baz', '/baz', '/baz/foo', '/baz/bar', '/baz/baz']);
+	});
+
 	it('should be able to flatten the "/" node', function() {
 		expect(treeTools.flatten(treeTools.find(tree, {path: '/'})).map(node => node.path)).to.deep.equal(['/', '/foo', '/foo/foo', '/foo/bar', '/foo/baz', '/bar', '/bar/foo', '/bar/bar', '/bar/baz', '/baz', '/baz/foo', '/baz/bar', '/baz/baz']);
 	});
