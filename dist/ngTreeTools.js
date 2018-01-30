@@ -66,7 +66,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
 						var walkedStack = false;
 						settings.childNode.some(function (key) {
 							// Walk down first found childNode entry
-							if (branch[key] && seekDown(branch[key])) {
+							if (branch[key] && _.isArray(branch[key]) && seekDown(branch[key])) {
 								// Found a valid key - stop iterating over possible key names
 								seekStack.unshift(branch);
 								walkedStack = true;
@@ -104,7 +104,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
 			var seekDown = function seekDown(branch, level) {
 				if (level > 0) seekStack.push(branch);
 				settings.childNode.some(function (key) {
-					if (branch[key]) {
+					if (branch[key] && _.isArray(branch[key])) {
 						branch[key].forEach(function (branchChild) {
 							seekDown(branchChild, level + 1);
 						});
