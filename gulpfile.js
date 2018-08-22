@@ -23,7 +23,7 @@ gulp.task('build', ()=>
 		.pipe(replace(/^.*require\(.*\);\s+$/gm, ''))
 		.pipe(replace(/^var treeTools = .+$/m, 'return {'))
 		.pipe(babel({
-			presets: ['es2015'],
+			presets: ['env'],
 			plugins: ['angularjs-annotate'],
 		}))
 		.pipe(gulp.dest('./dist'))
