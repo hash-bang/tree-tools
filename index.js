@@ -50,7 +50,7 @@ var treeTools = module.exports = {
 
 	/**
 	* Utility function to deep search a tree structure for a matching query and find parents up to the given query
-	* If found this function will return an array of all generations with the found branch as the last element of the array
+	* If found this function will return an array of all generations with the found branch as the last element of the array (i.e. root -> grandchildren order)
 	* @param {Object|array} tree The tree structure to search
 	* @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
 	* @param {Object} options Optional options object
