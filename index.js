@@ -144,20 +144,40 @@ var treeTools = module.exports = {
 
 
 	/**
+	* Utility function to deep scan a tree and return if any of it contains a matching element
+	* This works the same as a deep version of the lodash `_.has()` function combined with `some()`
+	* This function will exit as soon as the first element matches
+	* @param {Object|array} tree The tree structure to search
+	* @param {Object|function} query A valid lodash query to run
+	* @return {boolean} Boolean indicating that at least one sub-element matches the query
+	*/
+	hasSome: function(tree, query) {
+		if (_.find(tree, query)) return true;
+
+		if (_.isObject(tree)) return _.some(tree, i => treeTools.hasSome(i, query));
+	},
+
+
+	/**
 	* Recursively walk a tree evaluating all functions as promises and inserting their values
 	* @param {array|Object} tree The tree structure to resolve
 	* @param {Object} options Options object passed to parents() finder
 	* @param {boolean} [options.clone=false] Clone the tree before resolving it, this keeps the original intact but costs some time while cloning
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
+	* @param {boolean} [options.attempts=5] How many times to recurse when resolving promises-within-promises
+	* @param {function} [options.isPromise=_.isFunction] Function used to recognise a promise-like return when recursing into promises
 	* @return {Promise} A promise which will resolve with incomming tree object with all promises resolved
 	*/
 	resolve: function(tree, options) {
 		var settings = _.defaults(options, {
 			childNode: 'children',
 			clone: false,
+			attempts: 5,
+			isPromise: _.isFunction,
 		});
 
 		var base = settings.clone ? _.cloneDeep(tree) : tree;
+		var dirty = true; // Whether we saw a node sweep return a function instead of a scalar - indicates a new sweep is required
 
 		var resolver = (root, path) => {
 			var promiseQueue = [];
@@ -172,6 +192,9 @@ var treeTools = module.exports = {
 						Promise.resolve(child())
 							.then(res => {
 								// Set the tree path to the return value
+								if (_.isObject(res) && treeTools.hasSome(res, v => settings.isPromise(v))) {
+									dirty = true; // Returned a promise like object - mark sweep as dirty
+								}
 								_.set(base, path.concat([childIndex]), res);
 							})
 					);
@@ -181,7 +204,18 @@ var treeTools = module.exports = {
 			return Promise.all(promiseQueue)
 		};
 
-		return resolver(base, [])
+		return Promise.resolve()
+			.then(()=> new Promise((resolve, reject) => {
+				var attemptNext = ()=> {
+					if (--settings.attempts > 0 && dirty) {
+						dirty = false; // Mark sweep as clean - will get dirty if resolver sees a function return
+						resolver(base, []).then(attemptNext);
+					} else {
+						resolve();
+					}
+				};
+				attemptNext();
+			}))  // Loop the resolver until we are out of attempts
 			.then(()=> base);
 	},
 

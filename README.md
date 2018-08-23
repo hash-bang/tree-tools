@@ -75,6 +75,16 @@ Utility function to determines whether a given node has children.
 treeTools.hasChildren(someBranch); // Returns a boolean
 ```
 
+hasSome(tree, query)
+--------------------
+Utility function to determine if an item mataching query exists deep within a given tree.
+
+```javascript
+treeTools.hasSome(tree, {someKey: someValue});
+treeTools.hasSome(tree, (v, k) => { ... });
+```
+
+
 resolve(tree, [options])
 ------------------------
 Recursively walk a tree evaluating all functions as promises and inserting their values.
