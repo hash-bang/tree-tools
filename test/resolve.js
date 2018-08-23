@@ -42,7 +42,7 @@ describe('treeTools.resolve()', ()=> {
 			.catch(done)
 	})
 
-	it('should be able to resolve a simple set of child attributes', done => {
+	it('should be able to resolve a set of child attributes', done => {
 		var attributeTree = require('./data/promises-attributes');
 
 		treeTools.resolve(attributeTree.input)
@@ -53,6 +53,30 @@ describe('treeTools.resolve()', ()=> {
 			.catch(done)
 	});
 
+	it('should be able to populate an array of children', done => {
+		treeTools.resolve([
+			()=> ({id: 'foo'}),
+			()=> new Promise(resolve => resolve({id: 'bar'})),
+			()=> new Promise(resolve => setTimeout(()=> resolve({id: 'baz'}), 10)),
+			()=> ([{id: 'quz'}, {id: 'qux'}]),
+			()=> new Promise(resolve => setTimeout(()=> resolve([{id: 'flarp'}, {id: 'corge'}]), 10)),
+		])
+			.then(tree => {
+				expect(tree).to.nested.deep.equal([{id: 'foo'}, {id: 'bar'}, {id: 'baz'}, {id: 'quz'}, {id: 'qux'}, {id: 'flarp'}, {id: 'corge'}]);
+				done();
+			})
+			.catch(done)
+	});
+
+	it('should be able to resolve a arrays of children', done => {
+		var childrenTree = require('./data/promises-arrays');
+
+		treeTools.resolve(childrenTree.input)
+			.then(tree => {
+				expect(tree).to.nested.deep.equal(childrenTree.expected);
+				done();
+			})
+			.catch(done)
+	});
+
 });
-
-

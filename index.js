@@ -166,6 +166,8 @@ var treeTools = module.exports = {
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @param {boolean} [options.attempts=5] How many times to recurse when resolving promises-within-promises
 	* @param {function} [options.isPromise=_.isFunction] Function used to recognise a promise-like return when recursing into promises
+	* @param {boolean} [options.splice=true] Support splicing arrays (arrays are collapsed into their parents rather than returned as is)
+	* @param {function} [options.isSplice] Function used to determine if a node should be spliced. Called as (node, path, tree). Default bechaviour is to return true if both the node and the parents are arrays - i.e. only support array -> object -> array striping not array -> array
 	* @return {Promise} A promise which will resolve with incomming tree object with all promises resolved
 	*/
 	resolve: function(tree, options) {
@@ -173,11 +175,18 @@ var treeTools = module.exports = {
 			childNode: 'children',
 			clone: false,
 			attempts: 5,
+			splice: true,
 			isPromise: _.isFunction,
+			isSplice: (node, path, tree) => {
+				var parentNodePath = path.slice(0, -1);
+				var parentNode = parentNodePath.length ? _.get(tree, parentNodePath) : tree; // For empty node paths return the main tree
+				return _.isArray(node) && _.isArray(parentNode); // An array within an array?
+			},
 		});
 
 		var base = settings.clone ? _.cloneDeep(tree) : tree;
 		var dirty = true; // Whether we saw a node sweep return a function instead of a scalar - indicates a new sweep is required
+		var splices = [];
 
 		var resolver = (root, path) => {
 			var promiseQueue = [];
@@ -191,21 +200,30 @@ var treeTools = module.exports = {
 					promiseQueue.push(
 						Promise.resolve(child())
 							.then(res => {
-								// Set the tree path to the return value
-								if (_.isObject(res) && treeTools.hasSome(res, v => settings.isPromise(v))) {
+								var nodePath = path.concat([childIndex]);
+
+								// Recursion - Does this look like a value that we should do another sweep though later?
+								if (!dirty && _.isObject(res) && treeTools.hasSome(res, v => settings.isPromise(v))) {
 									dirty = true; // Returned a promise like object - mark sweep as dirty
 								}
-								_.set(base, path.concat([childIndex]), res);
+
+								// Set the tree path to the return value
+								_.set(base, nodePath, res);
+
+								// Does this value look like it should be spliced rather than set
+								if (settings.splice && settings.isSplice(res, nodePath, base)) {
+									splices.push(nodePath);
+								}
 							})
 					);
 				} // Everything else - leave alone as already resolved values
-			})
+			});
 
 			return Promise.all(promiseQueue)
 		};
 
 		return Promise.resolve()
-			.then(()=> new Promise((resolve, reject) => {
+			.then(()=> new Promise((resolve, reject) => { // Loop the resolver until we are out of attempts
 				var attemptNext = ()=> {
 					if (--settings.attempts > 0 && dirty) {
 						dirty = false; // Mark sweep as clean - will get dirty if resolver sees a function return
@@ -215,7 +233,17 @@ var treeTools = module.exports = {
 					}
 				};
 				attemptNext();
-			}))  // Loop the resolver until we are out of attempts
+			}))
+			.then(()=> { // Resolve all splices
+				if (!settings.splice) return;
+				splices.reverse().forEach(path => { // Reverse the array paths so we can work from the end backwards when splicing to maintain the index offsets
+					var spliceParentPath = path.slice(0, -1);
+					var spliceParent = spliceParentPath.length ? _.get(base, spliceParentPath) : base;
+					var spliceOffset = path[path.length - 1];
+					spliceParent.splice(spliceOffset, 1, ..._.get(base, path));
+				});
+				return null;
+			})
 			.then(()=> base);
 	},
 
