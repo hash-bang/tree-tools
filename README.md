@@ -75,6 +75,15 @@ Utility function to determines whether a given node has children.
 treeTools.hasChildren(someBranch); // Returns a boolean
 ```
 
+resolve(tree, [options])
+------------------------
+Recursively walk a tree evaluating all functions as promises and inserting their values.
+
+```javascript
+treeTools.resolve(complexTreeWithPromises)
+	.then(tree => {...})
+```
+
 
 sortBy(tree, propertyName)
 ------------------------------

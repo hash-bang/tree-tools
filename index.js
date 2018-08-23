@@ -22,7 +22,7 @@ var treeTools = module.exports = {
 	/**
 	* Return all branches of a tree as a flat array
 	* The return array with be a depth-first-search i.e. the order of the elements will be deepest traversal at each stage (so don't expact all root keys to be listed first)
-	* @param {Object} options Optional options object passed to parents() finder
+	* @param {Object} options Options object passed to parents() finder
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @return {Object|array} An array of all elements
 	*/
@@ -144,12 +144,55 @@ var treeTools = module.exports = {
 
 
 	/**
+	* Recursively walk a tree evaluating all functions as promises and inserting their values
+	* @param {array|Object} tree The tree structure to resolve
+	* @param {Object} options Options object passed to parents() finder
+	* @param {boolean} [options.clone=false] Clone the tree before resolving it, this keeps the original intact but costs some time while cloning
+	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
+	* @return {Promise} A promise which will resolve with incomming tree object with all promises resolved
+	*/
+	resolve: function(tree, options) {
+		var settings = _.defaults(options, {
+			childNode: 'children',
+			clone: false,
+		});
+
+		var base = settings.clone ? _.cloneDeep(tree) : tree;
+
+		var resolver = (root, path) => {
+			var promiseQueue = [];
+
+			_.forEach(root, (child, childIndex) => {
+				if (_.isArray(child)) { // Scan children
+					promiseQueue.push(resolver(child, path.concat([childIndex])));
+				} else if (_.isPlainObject(child)) { // Scan an object
+					promiseQueue.push(resolver(child, path.concat([childIndex])));
+				} else if (_.isFunction(child)) {
+					promiseQueue.push(
+						Promise.resolve(child())
+							.then(res => {
+								// Set the tree path to the return value
+								_.set(base, path.concat([childIndex]), res);
+							})
+					);
+				} // Everything else - leave alone as already resolved values
+			})
+
+			return Promise.all(promiseQueue)
+		};
+
+		return resolver(base, [])
+			.then(()=> base);
+	},
+
+
+	/**
 	 * Utility function to sort tree by specific property or an array of properties
 	 * @param {array} tree The tree structure to sort
 	 * @param {array|string} propertyName Property names to sort the tree
 	 * @return {array} An array sorted by propertyName
 	 */
-	sortBy: function (tree, propertyName) {
+	sortBy: function(tree, propertyName) {
 		// It is needed an array structure to sort.
 		if (!_.isArray(tree)) tree = [tree];
 
