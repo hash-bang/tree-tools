@@ -1,5 +1,7 @@
 'use strict';
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 angular.module('ngTreeTools', []).service('TreeTools', function () {
 
 	return {
@@ -23,7 +25,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
 		/**
   * Return all branches of a tree as a flat array
   * The return array with be a depth-first-search i.e. the order of the elements will be deepest traversal at each stage (so don't expact all root keys to be listed first)
-  * @param {Object} options Optional options object passed to parents() finder
+  * @param {Object} options Options object passed to parents() finder
   * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
   * @return {Object|array} An array of all elements
   */
@@ -50,7 +52,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
 
 		/**
   * Utility function to deep search a tree structure for a matching query and find parents up to the given query
-  * If found this function will return an array of all generations with the found branch as the last element of the array
+  * If found this function will return an array of all generations with the found branch as the last element of the array (i.e. root -> grandchildren order)
   * @param {Object|array} tree The tree structure to search
   * @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
   * @param {Object} options Optional options object
@@ -140,6 +142,116 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
 
 			return settings.childNode.some(function (key) {
 				return branch[key] && _.isArray(branch[key]) && branch[key].length;
+			});
+		},
+
+		/**
+  * Utility function to deep scan a tree and return if any of it contains a matching element
+  * This works the same as a deep version of the lodash `_.has()` function combined with `some()`
+  * This function will exit as soon as the first element matches
+  * @param {Object|array} tree The tree structure to search
+  * @param {Object|function} query A valid lodash query to run
+  * @return {boolean} Boolean indicating that at least one sub-element matches the query
+  */
+		hasSome: function hasSome(tree, query) {
+			if (_.find(tree, query)) return true;
+
+			if (_.isObject(tree)) return _.some(tree, function (i) {
+				return treeTools.hasSome(i, query);
+			});
+		},
+
+		/**
+  * Recursively walk a tree evaluating all functions as promises and inserting their values
+  * @param {array|Object} tree The tree structure to resolve
+  * @param {Object} options Options object passed to parents() finder
+  * @param {boolean} [options.clone=false] Clone the tree before resolving it, this keeps the original intact but costs some time while cloning
+  * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
+  * @param {boolean} [options.attempts=5] How many times to recurse when resolving promises-within-promises
+  * @param {function} [options.isPromise=_.isFunction] Function used to recognise a promise-like return when recursing into promises
+  * @param {boolean} [options.splice=true] Support splicing arrays (arrays are collapsed into their parents rather than returned as is)
+  * @param {function} [options.isSplice] Function used to determine if a node should be spliced. Called as (node, path, tree). Default bechaviour is to return true if both the node and the parents are arrays - i.e. only support array -> object -> array striping not array -> array
+  * @return {Promise} A promise which will resolve with incomming tree object with all promises resolved
+  */
+		resolve: function resolve(tree, options) {
+			var settings = _.defaults(options, {
+				childNode: 'children',
+				clone: false,
+				attempts: 5,
+				splice: true,
+				isPromise: _.isFunction,
+				isSplice: function isSplice(node, path, tree) {
+					var parentNodePath = path.slice(0, -1);
+					var parentNode = parentNodePath.length ? _.get(tree, parentNodePath) : tree; // For empty node paths return the main tree
+					return _.isArray(node) && _.isArray(parentNode); // An array within an array?
+				}
+			});
+
+			var base = settings.clone ? _.cloneDeep(tree) : tree;
+			var dirty = true; // Whether we saw a node sweep return a function instead of a scalar - indicates a new sweep is required
+			var splices = [];
+
+			var resolver = function resolver(root, path) {
+				var promiseQueue = [];
+
+				_.forEach(root, function (child, childIndex) {
+					if (_.isArray(child)) {
+						// Scan children
+						promiseQueue.push(resolver(child, path.concat([childIndex])));
+					} else if (_.isPlainObject(child)) {
+						// Scan an object
+						promiseQueue.push(resolver(child, path.concat([childIndex])));
+					} else if (_.isFunction(child)) {
+						promiseQueue.push(Promise.resolve(child()).then(function (res) {
+							var nodePath = path.concat([childIndex]);
+
+							// Recursion - Does this look like a value that we should do another sweep though later?
+							if (!dirty && _.isObject(res) && treeTools.hasSome(res, function (v) {
+								return settings.isPromise(v);
+							})) {
+								dirty = true; // Returned a promise like object - mark sweep as dirty
+							}
+
+							// Set the tree path to the return value
+							_.set(base, nodePath, res);
+
+							// Does this value look like it should be spliced rather than set
+							if (settings.splice && settings.isSplice(res, nodePath, base)) {
+								splices.push(nodePath);
+							}
+						}));
+					} // Everything else - leave alone as already resolved values
+				});
+
+				return Promise.all(promiseQueue);
+			};
+
+			return Promise.resolve().then(function () {
+				return new Promise(function (resolve, reject) {
+					// Loop the resolver until we are out of attempts
+					var attemptNext = function attemptNext() {
+						if (--settings.attempts > 0 && dirty) {
+							dirty = false; // Mark sweep as clean - will get dirty if resolver sees a function return
+							resolver(base, []).then(attemptNext);
+						} else {
+							resolve();
+						}
+					};
+					attemptNext();
+				});
+			}).then(function () {
+				// Resolve all splices
+				if (!settings.splice) return;
+				splices.reverse().forEach(function (path) {
+					// Reverse the array paths so we can work from the end backwards when splicing to maintain the index offsets
+					var spliceParentPath = path.slice(0, -1);
+					var spliceParent = spliceParentPath.length ? _.get(base, spliceParentPath) : base;
+					var spliceOffset = path[path.length - 1];
+					spliceParent.splice.apply(spliceParent, [spliceOffset, 1].concat(_toConsumableArray(_.get(base, path))));
+				});
+				return null;
+			}).then(function () {
+				return base;
 			});
 		},
 
