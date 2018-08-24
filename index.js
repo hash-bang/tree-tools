@@ -162,12 +162,13 @@ var treeTools = module.exports = {
 	* Recursively walk a tree evaluating all functions as promises and inserting their values
 	* @param {array|Object} tree The tree structure to resolve
 	* @param {Object} options Options object passed to parents() finder
-	* @param {boolean} [options.clone=false] Clone the tree before resolving it, this keeps the original intact but costs some time while cloning
+	* @param {boolean} [options.clone=false] Clone the tree before resolving it, this keeps the original intact but costs some time while cloning, without this the input will be mutated
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @param {boolean} [options.attempts=5] How many times to recurse when resolving promises-within-promises
 	* @param {function} [options.isPromise=_.isFunction] Function used to recognise a promise-like return when recursing into promises
 	* @param {boolean} [options.splice=true] Support splicing arrays (arrays are collapsed into their parents rather than returned as is)
 	* @param {function} [options.isSplice] Function used to determine if a node should be spliced. Called as (node, path, tree). Default bechaviour is to return true if both the node and the parents are arrays - i.e. only support array -> object -> array striping not array -> array
+	* @param {function} [options.wrapper=Promise.resolve] Wrap the promise in this function before resolving. Called as (nodeFunction, path, tree). Should return a promise or something that has 'that' compatibility
 	* @return {Promise} A promise which will resolve with incomming tree object with all promises resolved
 	*/
 	resolve: function(tree, options) {
@@ -182,6 +183,7 @@ var treeTools = module.exports = {
 				var parentNode = parentNodePath.length ? _.get(tree, parentNodePath) : tree; // For empty node paths return the main tree
 				return _.isArray(node) && _.isArray(parentNode); // An array within an array?
 			},
+			wrapper: node => Promise.resolve(node()),
 		});
 
 		var base = settings.clone ? _.cloneDeep(tree) : tree;
@@ -197,11 +199,10 @@ var treeTools = module.exports = {
 				} else if (_.isPlainObject(child)) { // Scan an object
 					promiseQueue.push(resolver(child, path.concat([childIndex])));
 				} else if (_.isFunction(child)) {
+					var nodePath = path.concat([childIndex]);
 					promiseQueue.push(
-						Promise.resolve(child())
+						(settings.wrapper(child, nodePath, base)) // Wrap the function and expect it to return a promise
 							.then(res => {
-								var nodePath = path.concat([childIndex]);
-
 								// Recursion - Does this look like a value that we should do another sweep though later?
 								if (!dirty && _.isObject(res) && treeTools.hasSome(res, v => settings.isPromise(v))) {
 									dirty = true; // Returned a promise like object - mark sweep as dirty

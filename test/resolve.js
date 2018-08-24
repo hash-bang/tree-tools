@@ -45,9 +45,28 @@ describe('treeTools.resolve()', ()=> {
 	it('should be able to resolve a set of child attributes', done => {
 		var attributeTree = require('./data/promises-attributes');
 
-		treeTools.resolve(attributeTree.input)
+		treeTools.resolve(attributeTree.input, {clone: true})
 			.then(tree => {
 				expect(tree).to.nested.deep.equal(attributeTree.expected);
+				done();
+			})
+			.catch(done)
+	});
+
+	it('should be able to resolve a set of child attributes with a custom wrapper', done => {
+		var attributeTree = require('./data/promises-attributes');
+
+		treeTools.resolve(attributeTree.input, {
+			clone: true,
+			wrapper: node => Promise.resolve(node()).then(res => 'XXX[' + res + ']XXX'),
+		})
+			.then(tree => {
+				expect(tree).to.have.nested.deep.property('0.children.0.title', 'XXX[Foo-Foo!]XXX');
+				expect(tree).to.have.nested.deep.property('0.children.1.title', 'XXX[Foo-Bar!]XXX');
+				expect(tree).to.have.nested.deep.property('0.children.2.title', 'XXX[Foo-Baz!]XXX');
+				expect(tree).to.have.nested.deep.property('1.children.2.children.0.title', 'XXX[Bar-Baz-Foo!]XXX');
+				expect(tree).to.have.nested.deep.property('1.children.2.children.1.title', 'XXX[Bar-Baz-Bar!]XXX');
+				expect(tree).to.have.nested.deep.property('1.children.2.children.2.title', 'XXX[Bar-Baz-Baz!]XXX');
 				done();
 			})
 			.catch(done)
@@ -71,7 +90,7 @@ describe('treeTools.resolve()', ()=> {
 	it('should be able to resolve a arrays of children', done => {
 		var childrenTree = require('./data/promises-arrays');
 
-		treeTools.resolve(childrenTree.input)
+		treeTools.resolve(childrenTree.input, {clone: true})
 			.then(tree => {
 				expect(tree).to.nested.deep.equal(childrenTree.expected);
 				done();
