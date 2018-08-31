@@ -21,7 +21,7 @@ gulp.task('build', ()=>
 		.pipe(rename('ngTreeTools.js'))
 		.pipe(inject.wrap('angular.module(\'ngTreeTools\', []).service(\'TreeTools\', function() {\n', '});'))
 		.pipe(replace(/^.*require\(.*\);\s+$/gm, ''))
-		.pipe(replace(/^var treeTools = .+$/m, 'return {'))
+		.pipe(replace(/^var treeTools = .+$/m, 'return treeTools = {'))
 		.pipe(babel({
 			presets: ['env'],
 			plugins: ['angularjs-annotate'],
