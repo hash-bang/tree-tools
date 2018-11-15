@@ -6,7 +6,7 @@ var treeTools = module.exports = {
 	* This method is really just a convenience wrapper around parents(tree, query, {limit: 1})
 	* @param {Object|array} tree The tree structure to search (assumed to be a collection)
 	* @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
-	* @param {Object} options Optional options object passed to parents() finder
+	* @param {Object} [options] Optional options object passed to parents() finder
 	* @return {array|undefined} A generation list of all parents decending to the found item
 	*/
 	find: function(tree, query, options) {
@@ -22,7 +22,8 @@ var treeTools = module.exports = {
 	/**
 	* Return all branches of a tree as a flat array
 	* The return array with be a depth-first-search i.e. the order of the elements will be deepest traversal at each stage (so don't expact all root keys to be listed first)
-	* @param {Object} options Options object passed to parents() finder
+	* @param {Object|array} tree The tree structure to search (assumed to be a collection)
+	* @param {Object} [options] Options object passed to parents() finder
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @return {Object|array} An array of all elements
 	*/
@@ -53,7 +54,7 @@ var treeTools = module.exports = {
 	* If found this function will return an array of all generations with the found branch as the last element of the array (i.e. root -> grandchildren order)
 	* @param {Object|array} tree The tree structure to search
 	* @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
-	* @param {Object} options Optional options object
+	* @param {Object} [options] Optional options object
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @return {array} A generation list of all parents decending to the found item
 	*/
@@ -96,7 +97,7 @@ var treeTools = module.exports = {
 	* If found this function will return an array of all child elements NOT including the query element
 	* @param {Object|array} tree The tree structure to search (assumed to be a collection)
 	* @param {Object|function|null} [query] A valid lodash query to run (anything valid via _.find()) or a callback function. If null the entire flattened tree is returned
-	* @param {Object} options Optional options object
+	* @param {Object} [options] Optional options object
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @return {array} An array of all child elements under that item
 	*/
@@ -130,7 +131,7 @@ var treeTools = module.exports = {
 	/**
 	* Utility function to determines whether a given node has children
 	* @param {Object|array} branch The tree structure to search (assumed to be a collection)
-	* @param {Object} options Optional options object
+	* @param {Object} [options] Optional options object
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @return {array} An array of all child elements under that item
 	*/
@@ -161,7 +162,7 @@ var treeTools = module.exports = {
 	/**
 	* Recursively walk a tree evaluating all functions as promises and inserting their values
 	* @param {array|Object} tree The tree structure to resolve
-	* @param {Object} options Options object passed to parents() finder
+	* @param {Object} [options] Options object passed to parents() finder
 	* @param {boolean} [options.clone=false] Clone the tree before resolving it, this keeps the original intact but costs some time while cloning, without this the input will be mutated
 	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
 	* @param {boolean} [options.attempts=5] How many times to recurse when resolving promises-within-promises
