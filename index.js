@@ -20,6 +20,47 @@ var treeTools = module.exports = {
 
 
 	/**
+	* Return a copy of the tree with all non-matching nodes removed
+	*
+	* NOTE: This function seeks downwards, so any parent that does not match will also omit its child nodes
+	*
+	* @param {Object|array} tree The tree structure to search (assumed to be a collection)
+	* @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
+	* @param {Object} [options] Options object
+	* @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
+	*/
+	filter: function(tree, query, options) {
+		var compiledQuery = _.isFunction(query) ? query : _.matches(query);
+		var settings = _.defaults(options, {
+			childNode: ['children'],
+		});
+		settings.childNode = _.castArray(settings.childNode);
+
+		var seekDown = tree =>
+			tree
+				.filter((branch, index) => compiledQuery(branch, index))
+				.map(branch => {
+					settings.childNode.some(key => {
+						if (_.has(branch, key)) {
+							if (_.isArray(branch[key])) {
+								branch[key] = seekDown(branch[key]);
+							} else {
+								delete branch[key];
+							}
+						}
+					});
+					return branch;
+				});
+
+		if (_.isArray(tree)) {
+			return seekDown(tree, []) || [];
+		} else {
+			return seekDown([tree], [])[0] || {};
+		}
+	},
+
+
+	/**
 	* Return all branches of a tree as a flat array
 	* The return array with be a depth-first-search i.e. the order of the elements will be deepest traversal at each stage (so don't expact all root keys to be listed first)
 	* @param {Object|array} tree The tree structure to search (assumed to be a collection)

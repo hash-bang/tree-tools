@@ -28,6 +28,16 @@ API
 ===
 In all the examples below the example tree structure is similar to [the main test case](test/test.js).
 
+filter(tree, query)
+-------------------
+Return a copy of a tree while filtering nodes.
+Query can be any valid lodash matching object or a function.
+
+```javascript
+treeTools.find(tree, (node, index) => matchingExpression);
+```
+
+
 find(tree, query, [options])
 ----------------------------
 Find a single node deeply within a tree structure.
