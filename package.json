@@ -25,10 +25,10 @@
   },
   "homepage": "https://github.com/hash-bang/tree-tools#readme",
   "devDependencies": {
-    "@babel/core": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
+    "@babel/core": "^7.1.6",
+    "@babel/preset-env": "^7.1.6",
     "babel-plugin-angularjs-annotate": "^0.9.0",
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^8.0.0",
     "gulp-inject-string": "^1.1.1",
@@ -40,6 +40,6 @@
     "mocha": "^5.2.0"
   },
   "dependencies": {
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.11"
   }
 }
