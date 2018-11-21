@@ -8,8 +8,30 @@ var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
 
 gulp.task('default', ['build']);
+gulp.task('build', ['build', 'build:ng']);
 
 gulp.task('build', ()=>
+	gulp.src('./index.js')
+		.pipe(plumber({
+			errorHandler: function(err) {
+				gutil.log(gutil.colors.red('ERROR DURING JS BUILD'));
+				process.stdout.write(err.stack);
+				this.emit('end');
+			},
+		}))
+		.pipe(rename('tree-tools.js'))
+		.pipe(replace(/^.*require\(.*\);\s+$/gm, ''))
+		.pipe(replace(/^var treeTools = .+$/m, 'window.TreeTools = {'))
+		.pipe(babel({
+			presets: ['@babel/env'],
+		}))
+		.pipe(gulp.dest('./dist'))
+		.pipe(uglify())
+		.pipe(rename('tree-tools.min.js'))
+		.pipe(gulp.dest('./dist'))
+);
+
+gulp.task('build:ng', ()=>
 	gulp.src('./index.js')
 		.pipe(plumber({
 			errorHandler: function(err) {
