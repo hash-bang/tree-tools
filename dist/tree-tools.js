@@ -161,7 +161,7 @@ window.TreeTools = {
     });
 
     settings.childNode = _.castArray(settings.childNode);
-    var rootNode = query ? treeTools.find(tree, query) : tree;
+    var rootNode = query ? TreeTools.find(tree, query) : tree;
     var seekStack = [];
 
     var seekDown = function seekDown(branch, level) {
@@ -208,7 +208,7 @@ window.TreeTools = {
   hasSome: function hasSome(tree, query) {
     if (_.find(tree, query)) return true;
     if (_.isObject(tree)) return _.some(tree, function (i) {
-      return treeTools.hasSome(i, query);
+      return TreeTools.hasSome(i, query);
     });
   },
 
@@ -263,7 +263,7 @@ window.TreeTools = {
           promiseQueue.push(settings.wrapper(child, nodePath, base). // Wrap the function and expect it to return a promise
           then(function (res) {
             // Recursion - Does this look like a value that we should do another sweep though later?
-            if (!dirty && _.isObject(res) && treeTools.hasSome(res, function (v) {
+            if (!dirty && _.isObject(res) && TreeTools.hasSome(res, function (v) {
               return settings.isPromise(v);
             })) {
               dirty = true; // Returned a promise like object - mark sweep as dirty

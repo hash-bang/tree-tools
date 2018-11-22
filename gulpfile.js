@@ -22,6 +22,7 @@ gulp.task('build', ()=>
 		.pipe(rename('tree-tools.js'))
 		.pipe(replace(/^.*require\(.*\);\s+$/gm, ''))
 		.pipe(replace(/^var treeTools = .+$/m, 'window.TreeTools = {'))
+		.pipe(replace(/treeTools/g, 'TreeTools'))
 		.pipe(babel({
 			presets: ['@babel/env'],
 		}))
