@@ -9,13 +9,14 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
 angular.module('ngTreeTools', []).service('TreeTools', function () {
+  var treeTools;
   return treeTools = {
     /**
     * Find a single node deeply within a tree structure
     * This method is really just a convenience wrapper around parents(tree, query, {limit: 1})
     * @param {Object|array} tree The tree structure to search (assumed to be a collection)
     * @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
-    * @param {Object} options Optional options object passed to parents() finder
+    * @param {Object} [options] Optional options object passed to parents() finder
     * @return {array|undefined} A generation list of all parents decending to the found item
     */
     find: function find(tree, query, options) {
@@ -28,9 +29,53 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     },
 
     /**
+    * Return a copy of the tree with all non-matching nodes removed
+    *
+    * NOTE: This function seeks downwards, so any parent that does not match will also omit its child nodes
+    *
+    * @param {Object|array} tree The tree structure to search (assumed to be a collection)
+    * @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
+    * @param {Object} [options] Options object
+    * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
+    */
+    filter: function filter(tree, query, options) {
+      var compiledQuery = _.isFunction(query) ? query : _.matches(query);
+
+      var settings = _.defaults(options, {
+        childNode: ['children']
+      });
+
+      settings.childNode = _.castArray(settings.childNode);
+
+      var seekDown = function seekDown(tree) {
+        return tree.filter(function (branch, index) {
+          return compiledQuery(branch, index);
+        }).map(function (branch) {
+          settings.childNode.some(function (key) {
+            if (_.has(branch, key)) {
+              if (_.isArray(branch[key])) {
+                branch[key] = seekDown(branch[key]);
+              } else {
+                delete branch[key];
+              }
+            }
+          });
+          return branch;
+        });
+      };
+
+      if (_.isArray(tree)) {
+        return seekDown(tree, []) || [];
+      } else {
+        return seekDown([tree], [])[0] || {};
+      }
+    },
+
+    /**
     * Return all branches of a tree as a flat array
     * The return array with be a depth-first-search i.e. the order of the elements will be deepest traversal at each stage (so don't expact all root keys to be listed first)
-    * @param {Object} options Options object passed to parents() finder
+    * @param {Object|array} tree The tree structure to search (assumed to be a collection)
+    * @param {Object} [options] Options object passed to parents() finder
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     * @return {Object|array} An array of all elements
     */
@@ -60,7 +105,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     * If found this function will return an array of all generations with the found branch as the last element of the array (i.e. root -> grandchildren order)
     * @param {Object|array} tree The tree structure to search
     * @param {Object|function} query A valid lodash query to run (anything valid via _.find()) or a matching function to be run on each node
-    * @param {Object} options Optional options object
+    * @param {Object} [options] Optional options object
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     * @return {array} A generation list of all parents decending to the found item
     */
@@ -106,7 +151,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     * If found this function will return an array of all child elements NOT including the query element
     * @param {Object|array} tree The tree structure to search (assumed to be a collection)
     * @param {Object|function|null} [query] A valid lodash query to run (anything valid via _.find()) or a callback function. If null the entire flattened tree is returned
-    * @param {Object} options Optional options object
+    * @param {Object} [options] Optional options object
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     * @return {array} An array of all child elements under that item
     */
@@ -140,7 +185,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     /**
     * Utility function to determines whether a given node has children
     * @param {Object|array} branch The tree structure to search (assumed to be a collection)
-    * @param {Object} options Optional options object
+    * @param {Object} [options] Optional options object
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     * @return {array} An array of all child elements under that item
     */
@@ -172,7 +217,7 @@ angular.module('ngTreeTools', []).service('TreeTools', function () {
     /**
     * Recursively walk a tree evaluating all functions as promises and inserting their values
     * @param {array|Object} tree The tree structure to resolve
-    * @param {Object} options Options object passed to parents() finder
+    * @param {Object} [options] Options object passed to parents() finder
     * @param {boolean} [options.clone=false] Clone the tree before resolving it, this keeps the original intact but costs some time while cloning, without this the input will be mutated
     * @param {array|string} [options.childNode="children"] Node or nodes to examine to discover the child elements
     * @param {boolean} [options.attempts=5] How many times to recurse when resolving promises-within-promises
