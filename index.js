@@ -210,7 +210,7 @@ var treeTools = module.exports = {
 	* @param {function} [options.isPromise=_.isFunction] Function used to recognise a promise-like return when recursing into promises
 	* @param {boolean} [options.splice=true] Support splicing arrays (arrays are collapsed into their parents rather than returned as is)
 	* @param {function} [options.isSplice] Function used to determine if a node should be spliced. Called as (node, path, tree). Default bechaviour is to return true if both the node and the parents are arrays - i.e. only support array -> object -> array striping not array -> array
-	* @param {function} [options.wrapper=Promise.resolve] Wrap the promise in this function before resolving. Called as (nodeFunction, path, tree). Should return a promise or something that has 'that' compatibility
+	* @param {function} [options.wrapper=Promise.resolve] Wrap the promise in this function before resolving. Called as (nodeFunction, path, tree). Should return a promise or something that has 'then' compatibility
 	* @return {Promise} A promise which will resolve with incomming tree object with all promises resolved
 	*/
 	resolve: function(tree, options) {
