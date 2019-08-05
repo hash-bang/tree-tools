@@ -7,9 +7,6 @@ var rename = require('gulp-rename');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
 
-gulp.task('default', ['build']);
-gulp.task('build', ['build', 'build:ng']);
-
 gulp.task('build', ()=>
 	gulp.src('./index.js')
 		.pipe(plumber({
@@ -54,3 +51,6 @@ gulp.task('build:ng', ()=>
 		.pipe(rename('ngTreeTools.min.js'))
 		.pipe(gulp.dest('./dist'))
 );
+
+gulp.task('build', gulp.parallel('build', 'build:ng'));
+gulp.task('default', gulp.series('build'));
